@@ -1,0 +1,63 @@
+<html>
+    <head>
+        <script src="node_modules/@microsoft/signalr/dist/browser/signalr.min.js" >
+        </script>
+            <script src="node_modules/chart.js/dist/chart.min.js" >
+            </script>
+    </head>
+    <body>
+        <ul id="messagesList"></ul>
+        <script>
+
+        async function initializeSignalR() {
+            let connection = new signalR.HubConnectionBuilder()
+            .withUrl("http://localhost:5000/chat")
+            .build();
+
+            connection.on("Streaming", data => {
+                console.log(data);
+            });
+
+            connection.on("Streaming", function () {
+            if (isStreaming === false)
+
+            });
+
+            await connection.start().then(function () {
+                console.log("connected");
+                recordStream(connection);
+            });
+
+            return connection;
+        }
+
+        initializeSignalR();
+
+            function recordStream(connection) {
+
+                connection.stream("Streaming")
+            .subscribe({
+                    next: (item) => {
+                        var li = document.createElement("li");
+                        li.textContent = item;
+                        document.getElementById("messagesList").appendChild(li);
+                    },
+                    complete: () => {
+                        var li = document.createElement("li");
+                        li.textContent = "Stream completed";
+                        document.getElementById("messagesList").appendChild(li);
+                    },
+                    error: (err) => {
+                        var li = document.createElement("li");
+                        li.textContent = err;
+                        document.getElementById("messagesList").appendChild(li);
+                    },
+            });
+
+
+            }
+
+
+        </script>
+    </body>
+</html>

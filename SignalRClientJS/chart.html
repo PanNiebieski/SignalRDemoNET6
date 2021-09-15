@@ -1,0 +1,140 @@
+<html>
+    <head>
+        <script src="node_modules/@microsoft/signalr/dist/browser/signalr.min.js" >
+        </script>
+            <script src="node_modules/chart.js/dist/chart.min.js" >
+            </script>
+    </head>
+    <body>
+        <div width="400" height="400">
+            <canvas id="myChart" width="400" height="400"></canvas>
+            <ul id="messagesList">
+            </ul>
+        </div>
+
+        <script>
+
+            class ChartModel {
+                constructor(data, label) {
+                    this.data = data;
+                    this.label = label;
+                }
+            }
+
+
+            async function initializeSignalR() {
+                let connection = new signalR.HubConnectionBuilder()
+                    .withUrl("http://localhost:5000/chart")
+                    .build();
+
+                connection.on("Streaming", data => {
+                    console.log(data);
+                });
+
+                connection.on("Streaming", function () {
+                    if (isStreaming === false)
+                        startStreamCast()
+                });
+
+                await connection.start().then(function () {
+                    console.log("connected");
+                    recordStream(connection);
+                });
+
+                return connection;
+            }
+
+            initializeSignalR();
+
+
+            function recordStream(connection) {
+                let firsttime = true;
+                connection.stream("Streaming")
+                    .subscribe({
+                        next: (item) => {
+
+                            if (firsttime) {
+                                initChart(item);
+                                firsttime = false;
+                            } else {
+                                let data = item.map((c, index) => c.data[0])
+                                update(data);
+                            }
+
+
+                        },
+                        complete: () => {
+                            var li = document.createElement("li");
+                            li.textContent = "Stream completed";
+                            document.getElementById("messagesList").appendChild(li);
+                        },
+                        error: (err) => {
+                            var li = document.createElement("li");
+                            li.textContent = err;
+                            document.getElementById("messagesList").appendChild(li);
+                        },
+                    });
+            }
+
+            var myChart = null;
+            function initChart(item) {
+
+                let labels = item.map((c, index) => c.label);
+                let data = item.map((c, index) => c.data[0])
+
+                var ctx = document.getElementById('myChart');
+
+                myChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '% Zysk z Akcji',
+                            data: data,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.2)',
+                                'rgba(54, 162, 235, 0.2)',
+                                'rgba(255, 206, 86, 0.2)',
+                                'rgba(75, 192, 192, 0.2)',
+                            ],
+                            borderColor: [
+                                'rgba(255, 99, 132, 1)',
+                                'rgba(54, 162, 235, 1)',
+                                'rgba(255, 206, 86, 1)',
+                                'rgba(75, 192, 192, 1)',
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+
+                        }
+                    }
+                });
+            }
+
+
+
+            function update(datas) {
+                myChart.data.datasets[0].data = datas;
+                myChart.update();
+            }
+        </script>
+
+
+
+        <style>
+            canvas {
+
+            }
+        </style>
+        <b
+    </body>
+</html>

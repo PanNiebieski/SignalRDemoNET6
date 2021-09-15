@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@microsoft/signalr": "^5.0.10",
+    "chart.js": "^3.5.1"
+  }
+}
